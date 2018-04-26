@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title></title>
+    <link href="https://fonts.googleapis.com/css?family=Tajawal" rel="stylesheet">
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+        }
+        canvas {
+            display: none;
+        }
+        .tv {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            background-size: cover;
+        }
+        #overlay,button {
+            position: absolute;
+            z-index: 9;
+            display: block;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+        button {
+            z-index: 10;
+        }
+        a {
+            text-decoration: none;
+            color: white;
+        }
+        a:hover, a:hover * {
+            text-shadow: 0 0 20px white;
+        }
+
+        p {
+            font-size: 1em;
+        }
+        h1 {
+            font-size: 2em;
+        }
+        h2 {
+            font-size: 1.4em;
+        }
+    </style>
+</head>
+
+<body>
+    <button>Start</button>
+    <div id="overlay">
+        <div class="title">
+            <a href="https://sea-grass.github.io/display2">
+                <h1>Display2</h1>
+            </a>
+        </div>
+        <div class="source">
+            <a href="https://github.com/sea-grass/display2">
+                <h2>on GitHub</h2>
+            </a>
+        </div>
+    </div>
+    <script src="bundle.js"></script>
+</body>
+</html>
