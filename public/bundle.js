@@ -3,7 +3,7 @@ var Rx = require('rxjs/Rx');
 
 function start (fps, init, update, render) {
     'use strict';
-    const timeObservable = Rx.Observable.interval(1000 / fps);
+    const time$ = Rx.Observable.interval(1000 / fps);
     const queue = Rx.Scheduler.queue;
     const boardStateSubject = new Rx.Subject();
     const animationFrameScheduler = Rx.Scheduler.animationFrame;
@@ -12,7 +12,7 @@ function start (fps, init, update, render) {
         time: 0
     });
 
-    timeObservable
+    time$
         .subscribe(
         t => {
             const state = {
@@ -43,11 +43,20 @@ const onBrowser = (function() {
 }());
 
 const fps = 60;
+const DEBUG = true;
 // keep it square
-const width = 800;
-const height = 800;
+const length = 200;
+const width = length;
+const height = length;
+const tvSize = 50;
+const windowWidth = 800;
+const windowHeight = 800;
+// const numTv = windowWidth/tvSize+windowHeight/tvSize;
+const numTv = 1;
 
+var container;
 var ctx;
+var tvList;
 
 if (onBrowser) {
     const button = document.querySelector("button");
@@ -58,11 +67,21 @@ if (onBrowser) {
 }
 
 function init() {
+    container = document.body;
+
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
     ctx = canvas.getContext("2d");
-    document.body.appendChild(canvas);
+    ctx.imageSmoothingEnabled = false;
+
+    for (var i = 0; i < numTv; i++) {
+        const div = document.createElement("div");
+        div.classList.add("tv");
+        container.appendChild(div);
+    }
+
+    tvList = Array.from(document.querySelectorAll(".tv"));
 }
 
 // perform updates to the state, then pass the updated state to the subject
@@ -86,6 +105,7 @@ function render(state) {
     const t = state.time;
     const board = state.board;
 
+    if (DEBUG) console.time("render");
     if (onBrowser) {
         // ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         const v = t;
@@ -93,18 +113,21 @@ function render(state) {
         const n = width;
         draw(n, v);
     }
+    if (DEBUG) console.timeEnd("render");
 }
 
 function draw(n, v) {
     // global ctx
     var colour = 0;
-    const weight = 10;
+    const weight = 1;
     const maxColour = 256*256*256-1;
+
+    // draw to our canvas
     for (var i = 0; i < n*n; i++) {
         const coordinates = get2DFrom1D(i, n); // give it the index and column size
         const offset = {
-            x: weight,
-            y: weight
+            x: 0,
+            y: 0
         };
         const x = coordinates.x + offset.x;
         const y = coordinates.y + offset.y;
@@ -118,7 +141,10 @@ function draw(n, v) {
 
         colour = (colour+v)%maxColour;
     }
-    ctx.fillRect(50, 50, 10, weight + 1);
+
+    const imageData = ctx.canvas.toDataURL();
+    // and multiply the image to all img elements
+    tvList.forEach(tv => tv.style.background = 'url(' + imageData + ')');
 }
 
 function get2DFrom1D(index, numCols) {
