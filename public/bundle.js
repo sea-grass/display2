@@ -6,6 +6,7 @@ function start (fps, init, update, render) {
     const timeObservable = Rx.Observable.interval(1000 / fps);
     const queue = Rx.Scheduler.queue;
     const boardStateSubject = new Rx.Subject();
+    const animationFrameScheduler = Rx.Scheduler.animationFrame;
 
     queue.schedule(init, 0, {
         time: 0
@@ -22,9 +23,9 @@ function start (fps, init, update, render) {
         );
     boardStateSubject
         .subscribe(
-            state => {
+            state => animationFrameScheduler.schedule(state => {
                 render(state);
-            }
+            }, 0, state)
         )
 }
 
@@ -42,6 +43,9 @@ const onBrowser = (function() {
 }());
 
 const fps = 60;
+// keep it square
+const width = 800;
+const height = 800;
 
 var ctx;
 
@@ -55,8 +59,8 @@ if (onBrowser) {
 
 function init() {
     const canvas = document.createElement("canvas");
-    canvas.width = 800;
-    canvas.height = 800;
+    canvas.width = width;
+    canvas.height = height;
     ctx = canvas.getContext("2d");
     document.body.appendChild(canvas);
 }
@@ -78,30 +82,57 @@ function update(state, subject) {
 }
 
 function render(state) {
+    // global ctx
     const t = state.time;
     const board = state.board;
 
     if (onBrowser) {
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.fillStyle = "black";
-        board.forEach(function(val, i) {
-            const min = 2;
-            var str = Array.from(t.toString(16).padStart(2, 0).substr(0,2).repeat(3));
-            if ((t+val) % 2 === 0) str = str.map((val, i) => str[(i+1)%str.length]);
-            const colour = "#" + str.join('');
-            const magnitude = 10;
-            const gobbeldy = magnitude*magnitude;
-            const badfood = 150;
-            // const x = magnitude * i;
-            // const y = magnitude * i;
-            const x = Math.sin(i * t) * gobbeldy + badfood * Math.cos(i*t) + 400;
-            const y = Math.cos(i * t) * gobbeldy + badfood * Math.sin(i*t) + 400;
-            const w = magnitude * val + min;
-            const h = magnitude * val + badfood * Math.cos(i*t) + min;
-            ctx.fillStyle = colour;
-            ctx.fillRect(x, y, w, h);
-        });
+        // ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        const v = t;
+        // width or height? choose wisely. Should be square dimension canvas anyway
+        const n = width;
+        draw(n, v);
     }
+}
+
+function draw(n, v) {
+    // global ctx
+    var colour = 0;
+    const weight = 10;
+    const maxColour = 256*256*256-1;
+    for (var i = 0; i < n*n; i++) {
+        const coordinates = get2DFrom1D(i, n); // give it the index and column size
+        const offset = {
+            x: weight,
+            y: weight
+        };
+        const x = coordinates.x + offset.x;
+        const y = coordinates.y + offset.y;
+        const hexColour = getColourFromInteger(colour);
+        ctx.fillStyle = hexColour;
+
+        ctx.fillRect(
+            x, y,
+            weight, weight
+        );
+
+        colour = (colour+v)%maxColour;
+    }
+    ctx.fillRect(50, 50, 10, weight + 1);
+}
+
+function get2DFrom1D(index, numCols) {
+    return {
+        x: index % numCols,
+        y: Math.floor(index / numCols)
+    };
+}
+
+// return a hex colour string from the padded hex value of an integer
+function getColourFromInteger(i) {
+    return "#" + (
+        i.toString(16).padStart(6, 0).substr(0, 6)
+    );
 }
 },{"./eventProcessingLoop.js":1}],3:[function(require,module,exports){
 "use strict";
