@@ -1,5 +1,5 @@
 {
-  "name": "html-game",
+  "name": "display2",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,7 +8,7 @@
     "bundle": "browserify index.js -o public/bundle.js",
     "start": "node index.js"
   },
-  "author": "",
+  "author": "sea-grass",
   "license": "ISC",
   "dependencies": {
     "rxjs": "^6.0.0",
