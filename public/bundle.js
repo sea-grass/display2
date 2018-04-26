@@ -1,9 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 var Rx = require('rxjs/Rx');
 
-const fps = 10;
-
-function start (init, update, render) {
+function start (fps, init, update, render) {
     'use strict';
     const timeObservable = Rx.Observable.interval(1000 / fps);
     const queue = Rx.Scheduler.queue;
@@ -43,13 +41,15 @@ const onBrowser = (function() {
     return documentExists;
 }());
 
+const fps = 60;
+
 var ctx;
 
 if (onBrowser) {
     const button = document.querySelector("button");
     button.addEventListener('click', e => {
         button.remove();
-        eventProcessingLoop(init, update, render);
+        eventProcessingLoop(fps, init, update, render);
     });
 }
 

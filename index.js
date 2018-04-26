@@ -8,13 +8,15 @@ const onBrowser = (function() {
     return documentExists;
 }());
 
+const fps = 60;
+
 var ctx;
 
 if (onBrowser) {
     const button = document.querySelector("button");
     button.addEventListener('click', e => {
         button.remove();
-        eventProcessingLoop(init, update, render);
+        eventProcessingLoop(fps, init, update, render);
     });
 }
 

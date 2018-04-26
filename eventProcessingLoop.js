@@ -1,8 +1,6 @@
 var Rx = require('rxjs/Rx');
 
-const fps = 10;
-
-function start (init, update, render) {
+function start (fps, init, update, render) {
     'use strict';
     const timeObservable = Rx.Observable.interval(1000 / fps);
     const queue = Rx.Scheduler.queue;
