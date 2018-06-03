@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "bundle": "browserify index.js -o public/bundle.js",
+    "prettify": "prettier --write \"*.js\" \"!node_modules/**\" \"!public/**\"",
     "start": "node index.js"
   },
   "author": "sea-grass",
@@ -15,6 +16,7 @@
     "rxjs-compat": "^6.0.0"
   },
   "devDependencies": {
-    "browserify": "^16.2.0"
+    "browserify": "^16.2.0",
+    "prettier": "^1.13.4"
   }
 }
