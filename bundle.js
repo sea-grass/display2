@@ -44,17 +44,20 @@ const onBrowser = (function() {
 
 const fps = 60;
 const DEBUG = true;
-// keep it square
-const length = 200;
-const width = length;
-const height = length;
-const tvSize = 50;
+
 const windowWidth = 800;
 const windowHeight = 800;
 // const numTv = windowWidth/tvSize+windowHeight/tvSize;
 const numTv = 1;
 
+// keep it square
+var length = 63;
+var width = length;
+var height = length;
+var d = 0;
+
 var container;
+var canvas;
 var ctx;
 var tvList;
 
@@ -64,17 +67,57 @@ if (onBrowser) {
         button.remove();
         eventProcessingLoop(fps, init, update, render);
     });
+    
+    const sizeSelector = document.querySelector('#n');
+    sizeSelector.addEventListener('change', e => {
+      const selectedValue = sizeSelector.options[sizeSelector.selectedIndex].value;
+      setSize(Number.parseInt(selectedValue))
+    });
+    for (var i = length; i > 0; i--) {
+      const val = i;
+      const option = document.createElement('option');
+      option.value = val;
+      option.innerText = val;
+      sizeSelector.appendChild(option);
+    }
+    
+    const differenceSelector = document.querySelector('#d');
+    differenceSelector.addEventListener('change', e => {
+      const selectedValue = differenceSelector.options[differenceSelector.selectedIndex].value;
+      setDifference(Number.parseInt(selectedValue))
+    });
+    for (var i = 0; i < 10; i ++) {
+      const val = Math.pow(2, i);
+      const option = document.createElement('option');
+      option.value = val;
+      option.innerText = val;
+      differenceSelector.appendChild(option);
+    }
+}
+
+function setSize(new_size) {
+  // global length, width, height, canvas
+  length = new_size;
+  width = length;
+  height = length;
+  canvas.width = width;
+  canvas.height = height;
+}
+function setDifference(new_d) {
+  // global d
+  d = new_d;
 }
 
 function init() {
+  // global document,
     container = document.body;
 
-    const canvas = document.createElement("canvas");
+    canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
     ctx = canvas.getContext("2d");
     ctx.imageSmoothingEnabled = false;
-
+    
     for (var i = 0; i < numTv; i++) {
         const div = document.createElement("div");
         div.classList.add("tv");
@@ -117,13 +160,40 @@ function render(state) {
 }
 
 function draw(n, v) {
-    // global ctx
-    var colour = 0;
-    const weight = 1;
-    const maxColour = 256*256*256-1;
+  // global d
 
-    // draw to our canvas
-    for (var i = 0; i < n*n; i++) {
+    drawBuffer(
+      n,
+      generateVBuffer(n, v, d)
+    );
+}
+
+// n is the size of the image, where there are n*n pixels in the image
+// v is the default variance set for this buffer
+// d is used to add a difference to the variance per pixel, based on that
+// pixel's index
+function generateVBuffer(n, v, d) {
+  const numPixels = n*n;
+  var V = new Array(numPixels);
+  // create buffer of values
+  // V[0] = initial_colour
+  // V[1..numPixels] = v at that pixel, where v=variance from the previous colour
+  // set initial colour
+  V[0] = 0;
+  for (var i = 1; i < numPixels; i++) {
+    V[i] = v+i*d-1;
+  }
+  return V;
+}
+
+function drawBuffer(n, V) {
+  // global ctx
+  var colour = 0;
+  const maxColour = 256*256*256-1;
+  const weight = 1;
+  // draw the (kinda) buffer to our canvas
+    for (var i = 0; i < V.length; i++) {
+        colour = (colour+V[i])%maxColour;
         const coordinates = get2DFrom1D(i, n); // give it the index and column size
         const offset = {
             x: 0,
@@ -138,8 +208,6 @@ function draw(n, v) {
             x, y,
             weight, weight
         );
-
-        colour = (colour+v)%maxColour;
     }
 
     const imageData = ctx.canvas.toDataURL();
