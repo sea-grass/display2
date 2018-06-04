@@ -1,46 +1,54 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-var Rx = require('rxjs/Rx');
+var Rx = require("rxjs/Rx");
 
-function start (fps, init, update, render) {
-    'use strict';
-    const time$ = Rx.Observable.interval(1000 / fps);
-    const queue = Rx.Scheduler.queue;
-    const boardStateSubject = new Rx.Subject();
-    const animationFrameScheduler = Rx.Scheduler.animationFrame;
+function start(fps, init, update, render) {
+  "use strict";
+  const time$ = Rx.Observable.interval(1000 / fps);
+  const queue = Rx.Scheduler.queue;
+  const boardStateSubject = new Rx.Subject();
+  const animationFrameScheduler = Rx.Scheduler.animationFrame;
 
-    queue.schedule(init, 0, {
-        time: 0
-    });
+  queue.schedule(init, 0, {
+    time: 0
+  });
 
-    time$
-        .subscribe(
-        t => {
-            const state = {
-                time: t
-            };
-            queue.schedule((state) => { update(state, boardStateSubject); }, 0, state);
-        }
-        );
-    boardStateSubject
-        .subscribe(
-            state => animationFrameScheduler.schedule(state => {
-                render(state);
-            }, 0, state)
-        )
+  time$.subscribe(t => {
+    const state = {
+      time: t
+    };
+    queue.schedule(
+      state => {
+        update(state, boardStateSubject);
+      },
+      0,
+      state
+    );
+  });
+  boardStateSubject.subscribe(state =>
+    animationFrameScheduler.schedule(
+      state => {
+        render(state);
+      },
+      0,
+      state
+    )
+  );
 }
 
-
 module.exports = start;
+
 },{"rxjs/Rx":234}],2:[function(require,module,exports){
 const eventProcessingLoop = require("./eventProcessingLoop.js");
 
 const onBrowser = (function() {
-    var documentExists = true;
-    try {
-        console.log(document);
-    } catch (e) { documentExists = false; }
-    return documentExists;
-}());
+  var documentExists = true;
+  try {
+    console.log(document);
+  } catch (e) {
+    documentExists = false;
+  }
+  return documentExists;
+})();
 
 const fps = 60;
 const DEBUG = true;
@@ -62,37 +70,42 @@ var ctx;
 var tvList;
 
 if (onBrowser) {
-    const button = document.querySelector("button");
-    button.addEventListener('click', e => {
-        button.remove();
-        eventProcessingLoop(fps, init, update, render);
-    });
-    
-    const sizeSelector = document.querySelector('#n');
-    sizeSelector.addEventListener('change', e => {
-      const selectedValue = sizeSelector.options[sizeSelector.selectedIndex].value;
-      setSize(Number.parseInt(selectedValue))
-    });
-    for (var i = length; i > 0; i--) {
-      const val = i;
-      const option = document.createElement('option');
-      option.value = val;
-      option.innerText = val;
-      sizeSelector.appendChild(option);
-    }
-    
-    const differenceSelector = document.querySelector('#d');
-    differenceSelector.addEventListener('change', e => {
-      const selectedValue = differenceSelector.options[differenceSelector.selectedIndex].value;
-      setDifference(Number.parseInt(selectedValue))
-    });
-    for (var i = 0; i < 10; i ++) {
-      const val = Math.pow(2, i);
-      const option = document.createElement('option');
-      option.value = val;
-      option.innerText = val;
-      differenceSelector.appendChild(option);
-    }
+  const button = document.querySelector("button");
+  button.addEventListener("click", e => {
+    button.remove();
+    eventProcessingLoop(fps, init, update, render);
+  });
+
+  const sizeSelector = document.querySelector("#n");
+  sizeSelector.addEventListener("change", e => {
+    const selectedValue =
+      sizeSelector.options[sizeSelector.selectedIndex].value;
+    setSize(Number.parseInt(selectedValue));
+  });
+  for (var i = 1; i <= 256; i++) {
+    const val = i;
+    addOption(sizeSelector, val, val === length);
+  }
+
+  const differenceSelector = document.querySelector("#d");
+  differenceSelector.addEventListener("change", e => {
+    const selectedValue =
+      differenceSelector.options[differenceSelector.selectedIndex].value;
+    setDifference(Number.parseInt(selectedValue));
+  });
+  addOption(differenceSelector, 0, 0 === d);
+  for (var i = 0; i < 20; i++) {
+    const val = Math.pow(2, i);
+    addOption(differenceSelector, val, val === d);
+  }
+}
+
+function addOption(selectEl, val, isSelected) {
+  const option = document.createElement("option");
+    option.value = val;
+    option.innerText = val;
+    if (isSelected) option.setAttribute('selected', 'selected');
+    selectEl.appendChild(option);
 }
 
 function setSize(new_size) {
@@ -110,62 +123,64 @@ function setDifference(new_d) {
 
 function init() {
   // global document,
-    container = document.body;
+  container = document.body;
 
-    canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    ctx = canvas.getContext("2d");
-    ctx.imageSmoothingEnabled = false;
-    
-    for (var i = 0; i < numTv; i++) {
-        const div = document.createElement("div");
-        div.classList.add("tv");
-        container.appendChild(div);
-    }
+  canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
 
-    tvList = Array.from(document.querySelectorAll(".tv"));
+  for (var i = 0; i < numTv; i++) {
+    const div = document.createElement("div");
+    div.classList.add("tv");
+    container.appendChild(div);
+  }
+
+  tvList = Array.from(document.querySelectorAll(".tv"));
 }
 
 // perform updates to the state, then pass the updated state to the subject
 function update(state, subject) {
-    const t = state.time;
+  const t = state.time;
 
-    var board = [];
-    for (var x = 0; x < 10; x++) {
-        for (var y = 0; y < 10; y++) {
-            board.push(t % (x + y));
-        }
+  var board = [];
+  for (var x = 0; x < 10; x++) {
+    for (var y = 0; y < 10; y++) {
+      board.push(t % (x + y));
     }
+  }
 
-    subject.next(Object.assign({
+  subject.next(
+    Object.assign(
+      {
         board: board
-    }, state))
+      },
+      state
+    )
+  );
 }
 
 function render(state) {
-    // global ctx
-    const t = state.time;
-    const board = state.board;
+  // global ctx
+  const t = state.time;
+  const board = state.board;
 
-    if (DEBUG) console.time("render");
-    if (onBrowser) {
-        // ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        const v = t;
-        // width or height? choose wisely. Should be square dimension canvas anyway
-        const n = width;
-        draw(n, v);
-    }
-    if (DEBUG) console.timeEnd("render");
+  if (DEBUG) console.time("render");
+  if (onBrowser) {
+    // ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    const v = t;
+    // width or height? choose wisely. Should be square dimension canvas anyway
+    const n = width;
+    draw(n, v);
+  }
+  if (DEBUG) console.timeEnd("render");
 }
 
 function draw(n, v) {
   // global d
 
-    drawBuffer(
-      n,
-      generateVBuffer(n, v, d)
-    );
+  drawBuffer(n, generateVBuffer(n, v, d));
 }
 
 // n is the size of the image, where there are n*n pixels in the image
@@ -173,7 +188,7 @@ function draw(n, v) {
 // d is used to add a difference to the variance per pixel, based on that
 // pixel's index
 function generateVBuffer(n, v, d) {
-  const numPixels = n*n;
+  const numPixels = n * n;
   var V = new Array(numPixels);
   // create buffer of values
   // V[0] = initial_colour
@@ -181,7 +196,7 @@ function generateVBuffer(n, v, d) {
   // set initial colour
   V[0] = 0;
   for (var i = 1; i < numPixels; i++) {
-    V[i] = v+i*d-1;
+    V[i] = v + i * d - 1;
   }
   return V;
 }
@@ -189,45 +204,47 @@ function generateVBuffer(n, v, d) {
 function drawBuffer(n, V) {
   // global ctx
   var colour = 0;
-  const maxColour = 256*256*256-1;
+  const maxColour = 256 * 256 * 256 - 1;
   const weight = 1;
   // draw the (kinda) buffer to our canvas
-    for (var i = 0; i < V.length; i++) {
-        colour = (colour+V[i])%maxColour;
-        const coordinates = get2DFrom1D(i, n); // give it the index and column size
-        const offset = {
-            x: 0,
-            y: 0
-        };
-        const x = coordinates.x + offset.x;
-        const y = coordinates.y + offset.y;
-        const hexColour = getColourFromInteger(colour);
-        ctx.fillStyle = hexColour;
+  for (var i = 0; i < V.length; i++) {
+    colour = (colour + V[i]) % maxColour;
+    const coordinates = get2DFrom1D(i, n); // give it the index and column size
+    const offset = {
+      x: 0,
+      y: 0
+    };
+    const x = coordinates.x + offset.x;
+    const y = coordinates.y + offset.y;
+    const hexColour = getColourFromInteger(colour);
+    ctx.fillStyle = hexColour;
 
-        ctx.fillRect(
-            x, y,
-            weight, weight
-        );
-    }
+    ctx.fillRect(x, y, weight, weight);
+  }
 
-    const imageData = ctx.canvas.toDataURL();
-    // and multiply the image to all img elements
-    tvList.forEach(tv => tv.style.background = 'url(' + imageData + ')');
+  const imageData = ctx.canvas.toDataURL();
+  // and multiply the image to all img elements
+  tvList.forEach(tv => (tv.style.background = "url(" + imageData + ")"));
 }
 
 function get2DFrom1D(index, numCols) {
-    return {
-        x: index % numCols,
-        y: Math.floor(index / numCols)
-    };
+  return {
+    x: index % numCols,
+    y: Math.floor(index / numCols)
+  };
 }
 
 // return a hex colour string from the padded hex value of an integer
 function getColourFromInteger(i) {
-    return "#" + (
-        i.toString(16).padStart(6, 0).substr(0, 6)
-    );
+  return (
+    "#" +
+    i
+      .toString(16)
+      .padStart(6, 0)
+      .substr(0, 6)
+  );
 }
+
 },{"./eventProcessingLoop.js":1}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
