@@ -42,12 +42,9 @@ if (onBrowser) {
       sizeSelector.options[sizeSelector.selectedIndex].value;
     setSize(Number.parseInt(selectedValue));
   });
-  for (var i = length; i > 0; i--) {
+  for (var i = 1; i <= 256; i++) {
     const val = i;
-    const option = document.createElement("option");
-    option.value = val;
-    option.innerText = val;
-    sizeSelector.appendChild(option);
+    addOption(sizeSelector, val, val === length);
   }
 
   const differenceSelector = document.querySelector("#d");
@@ -56,13 +53,19 @@ if (onBrowser) {
       differenceSelector.options[differenceSelector.selectedIndex].value;
     setDifference(Number.parseInt(selectedValue));
   });
-  for (var i = 0; i < 10; i++) {
+  addOption(differenceSelector, 0, 0 === d);
+  for (var i = 0; i < 20; i++) {
     const val = Math.pow(2, i);
-    const option = document.createElement("option");
-    option.value = val;
-    option.innerText = val;
-    differenceSelector.appendChild(option);
+    addOption(differenceSelector, val, val === d);
   }
+}
+
+function addOption(selectEl, val, isSelected) {
+  const option = document.createElement("option");
+  option.value = val;
+  option.innerText = val;
+  if (isSelected) option.setAttribute("selected", "selected");
+  selectEl.appendChild(option);
 }
 
 function setSize(new_size) {
